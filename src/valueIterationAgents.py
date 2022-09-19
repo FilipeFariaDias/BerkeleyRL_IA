@@ -42,8 +42,19 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.iterations = iterations
         self.values = util.Counter()  # A Counter is a dict with default 0
 
+        states = self.mdp.getStates()
         # Write value iteration code here
-        "*** YOUR CODE HERE ***"
+        for _ in range(iterations):
+            new_values = self.values.copy()
+            for state in states:
+                if self.mdp.isTerminal(state):
+                    continue
+                else:
+                    q_values = []
+                    for action in self.mdp.getPossibleActions(state):
+                        q_values.append(self.computeQValueFromValues(state, action))
+                    new_values[state] = max(q_values)
+            self.values = new_values
 
 
     def getValue(self, state):
@@ -57,8 +68,13 @@ class ValueIterationAgent(ValueEstimationAgent):
           Compute the Q-value of action in state from the
           value function stored in self.values.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        value = 0
+        for next_state, prob in self.mdp.getTransitionStatesAndProbs(state, action):
+            nextStateProbValue = prob * self.values[next_state]
+            reward = self.mdp.getReward(state, action, next_state)
+            value += reward + self.discount * nextStateProbValue
+        
+        return value
 
     def computeActionFromValues(self, state):
         """
@@ -69,8 +85,15 @@ class ValueIterationAgent(ValueEstimationAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return None.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        if self.mdp.isTerminal(state):
+            return None
+        
+        action_values = util.Counter()
+        possible_actions = self.mdp.getPossibleActions(state)
+        for action in possible_actions:
+            action_values[action] = self.computeQValueFromValues(state, action)
+        
+        return action_values.argMax()
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
